@@ -1,31 +1,43 @@
-// Хардкод логина и пароля
-const ADMIN_LOGIN = "admin";
-const ADMIN_PASSWORD = "1234";
+document.getElementById("login-btn").addEventListener("click", async () => {
 
-// Ждем полной загрузки DOM
-document.addEventListener("DOMContentLoaded", () => {
-    const loginBtn = document.getElementById("login-btn");
-    const loginInput = document.getElementById("login");
-    const passwordInput = document.getElementById("password");
-    const errorDiv = document.getElementById("error-msg");
+  const email = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const error = document.getElementById("error-msg");
 
-    loginBtn.addEventListener("click", () => {
-        const login = loginInput.value.trim();
-        const password = passwordInput.value.trim();
+  error.innerText = "";
 
-        if (!login || !password) {
-            errorDiv.textContent = "Введите логин и пароль";
-            errorDiv.style.display = "block";
-            return;
-        }
+  if (!email || !password) {
+    error.innerText = "Введите email и пароль";
+    return;
+  }
 
-        // Проверка логина и пароля
-        if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
-            // Переход на страницу пользователей
-            window.location.href = "/users.html"; // <--- абсолютный путь!
-        } else {
-            errorDiv.textContent = "Неверный логин или пароль";
-            errorDiv.style.display = "block";
-        }
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
     });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      error.innerText = "Неверный email или пароль";
+      return;
+    }
+
+    localStorage.setItem("userId", data.id);
+    localStorage.setItem("role", (data.rol || "").trim().toLowerCase());
+
+    const role = (localStorage.getItem("role") || "").toLowerCase().trim();
+
+if (role !== "admin") {
+    window.location.href = "/profile.html";
+}
+ else {
+    window.location.href = "/profil.html";
+}
+
+  } catch (e) {
+    error.innerText = "Ошибка сервера";
+  }
 });

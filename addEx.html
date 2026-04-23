@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan — Упражнение</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="logo">FitPlan</div>
+
+  <div style="display:flex; gap:10px;">
+    <a href="exercises.html">← Назад</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+
+    <h1>➕ Упражнение</h1>
+    <div class="hint">Создание или редактирование упражнения</div>
+
+    <form id="addExerciseForm">
+
+      <div class="form-group">
+        <label>Название</label>
+        <input type="text" id="exerciseName" required>
+      </div>
+
+      <div class="form-group">
+        <label>Группа мышц</label>
+        <select id="muscleGroup">
+          <option>Грудные</option>
+          <option>Спина</option>
+          <option>Ноги</option>
+          <option>Плечи</option>
+          <option>Руки</option>
+          <option>Пресс</option>
+          <option>Кардио</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Сложность</label>
+        <select id="difficulty">
+          <option value="easy">Лёгкая</option>
+          <option value="med" selected>Средняя</option>
+          <option value="hard">Сложная</option>
+        </select>
+      </div>
+
+      <button class="btn">💾 Сохранить</button>
+
+      <div id="formMessage" class="message"></div>
+
+    </form>
+
+  </div>
+
+</div>
+
+<script>
+const API = "http://localhost:2288";
+
+async function loadEdit() {
+  const id = new URLSearchParams(window.location.search).get("id");
+  if (!id) return;
+
+  const res = await fetch(`${API}/exercises/${id}`);
+  const ex = await res.json();
+
+  document.getElementById("exerciseName").value = ex.name;
+  document.getElementById("muscleGroup").value = ex.muscle_group;
+  document.getElementById("difficulty").value = ex.difficulty;
+
+  document.getElementById("addExerciseForm").dataset.editId = id;
+}
+
+document.getElementById("addExerciseForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+  const editId = form.dataset.editId;
+
+  const name = document.getElementById("exerciseName").value;
+  const muscleGroup = document.getElementById("muscleGroup").value;
+  const difficulty = document.getElementById("difficulty").value;
+
+  const msg = document.getElementById("formMessage");
+
+  try {
+    const url = editId ? `${API}/exercises/${editId}` : `${API}/exercises`;
+    const method = editId ? "PUT" : "POST";
+
+    await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, muscleGroup, difficulty })
+    });
+
+    msg.innerText = " Успешно сохранено";
+
+    setTimeout(() => {
+      window.location.href = "exercises.html";
+    }, 700);
+
+  } catch (err) {
+    msg.innerText = " Ошибка";
+  }
+});
+
+loadEdit();
+</script>
+
+</body>
+</html>

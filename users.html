@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Пользователи | FitAdmin</title>
+    <title>FitPlan</title>
     <link rel="stylesheet" href="/style.css">
+
     <style>
-        /* Минимальные стили для таблицы */
         .is-active { background-color: #f0f8ff; }
         .badge.active { color: green; }
         .badge.blocked { color: red; }
@@ -14,16 +14,43 @@
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     </style>
 </head>
+
 <body>
+
+<script>
+
+    const userId = localStorage.getItem("userId");
+const role = (localStorage.getItem("role") || "").toLowerCase();
+
+if (!userId) {
+    window.location.href = "/adminvh.html";
+}
+
+if (role !== "admin") {
+    window.location.href = "/profil.html";
+}
+
+</script>
+
 <div class="admin-container">
-    <nav class="sidebar">
-        <div class="logo">FitAdmin</div>
-        <ul>
-            <li><a href="users.html" class="active">Пользователи</a></li>
-            <li><a href="exercises.html">Упражнения</a></li>
-            <li><a href="nutrition.html">Питание</a></li>
-        </ul>
-    </nav>
+
+    <div class="navbar">
+
+  <div class="nav-left">
+    <div class="logo">FitPlan</div>
+  </div>
+
+  <div class="nav-center">
+    <a href="/profil.html">Профиль</a>
+    <a href="/exercises.html">Упражнения</a>
+    <a href="/nutrition.html">Питание</a>
+    <a href="/users.html" id="adminBtn" style="display:none;">
+      Пользователи
+    </a>
+  </div>
+
+</div>
+
     <main class="main-content">
         <header>
             <h1>Управление пользователями</h1>
@@ -32,6 +59,7 @@
 
         <section class="table-container">
             <p class="hint">Выберите пользователя для управления профилем</p>
+
             <table>
                 <thead>
                     <tr>
@@ -40,12 +68,11 @@
                         <th>Email</th>
                         <th>Параметры</th>
                         <th>Статус</th>
-                        <th class="actions-column">Действия</th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
-                <tbody id="users-table-body">
-                    <!-- Строки будут динамически вставляться сюда -->
-                </tbody>
+
+                <tbody id="users-table-body"></tbody>
             </table>
         </section>
     </main>
@@ -54,59 +81,78 @@
 <script>
 async function loadUsers() {
     try {
-        const response = await fetch("http://localhost:3000/users");
-        const users = await response.json();
+        const response = await fetch("/users");
+
+        if (!response.ok) {
+            throw new Error("Ошибка загрузки пользователей");
+        }
+
+        let users = await response.json();
+
+        if (!Array.isArray(users)) return;
+
+        users.sort((a, b) => a.UserID - b.UserID);
 
         const tbody = document.getElementById("users-table-body");
-        tbody.innerHTML = ""; // очистим таблицу
+        tbody.innerHTML = "";
 
         users.forEach(user => {
+
             const tr = document.createElement("tr");
             tr.classList.add("user-row");
 
             tr.innerHTML = `
-    <td>${user.UserID}</td>
-    <td class="name">${user.name}</td>
-    <td>${user.email}</td>
-    <td>
-        <span class="tag">${user.current_weight || "-"}</span>
-        <span class="tag">${user.height || "-"}</span>
-    </td>
-    <td>
-        <span class="badge active">Активен</span>
-    </td>
-    <td class="actions-cell">
-        <div class="action-group">
-            <button class="btn-ui edit">👤 <span>Профиль</span></button>
-            <button class="btn-ui delete">🚫 <span>Блок</span></button>
-        </div>
-    </td>
-`;
+                <td>${user.UserID}</td>
+                <td class="name">${user.name || "-"}</td>
+                <td>${user.email || "-"}</td>
+                <td>
+                    <span class="tag">${user.weight ?? "-"}</span>
+                    <span class="tag">${user.height ?? "-"}</span>
+                </td>
+                <td>
+                    <span class="badge active">Активен</span>
+                </td>
+                <td>
+                    <button class="btn-ui profile-btn">👤 Профиль</button>
+                </td>
+            `;
 
-            // Клик по строке
-            tr.addEventListener('click', () => {
-                document.querySelectorAll('.user-row').forEach(r => r.classList.remove('is-active'));
-                tr.classList.add('is-active');
+            tr.addEventListener("click", () => {
+                document.querySelectorAll(".user-row")
+                    .forEach(r => r.classList.remove("is-active"));
+                tr.classList.add("is-active");
             });
+
+            tr.querySelector(".profile-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    localStorage.setItem("selectedUserId", user.UserID);
+
+    window.location.href = "/profil.html";
+});
 
             tbody.appendChild(tr);
         });
+
     } catch (err) {
-        console.error("Ошибка при загрузке пользователей:", err);
+        console.error("Ошибка загрузки пользователей:", err);
     }
 }
 
-// Поиск по email
-document.getElementById("search-input").addEventListener("input", function() {
-    const filter = this.value.toLowerCase();
-    document.querySelectorAll("#users-table-body tr").forEach(row => {
-        const email = row.querySelector("td:nth-child(3)").textContent.toLowerCase();
-        row.style.display = email.includes(filter) ? "" : "none";
-    });
-});
-
-// Загружаем пользователей при загрузке страницы
 loadUsers();
+</script>
+<script>
+const roleCheck = (localStorage.getItem("role") || "").toLowerCase();
+
+if (roleCheck === "admin") {
+    document.getElementById("adminBtn").style.display = "inline-block";
+}
+</script>
+<script>
+function logout() {
+    localStorage.clear();
+    window.location.href = "/adminvh.html";
+}
 </script>
 </body>
 </html>

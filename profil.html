@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+  <div class="nav-left">
+    <div class="logo">FitPlan</div>
+  </div>
+
+  <div class="nav-center">
+    <a href="profile.html">Профиль</a>
+    <a href="exercises.html">Упражнения</a>
+    <a href="nutrition.html">Питание</a>
+    <a href="users.html" id="adminBtn" style="display:none;">
+    Пользователи
+  </a>
+    
+  </div>
+
+  <div class="nav-right">
+    <button class="logout" onclick="logout()">Выйти</button>
+  </div>
+
+</div>
+<div class="container">
+
+  <div class="hero">
+    <div style="display:flex; gap:16px; align-items:center;">
+      <div class="avatar" id="avatar">U</div>
+      <div>
+        <h2 id="nameTitle">Загрузка...</h2>
+        <small>ID: <span id="userId"></span></small>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="title"> Вес</div>
+      <div class="value" id="weight">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title">📏 Рост</div>
+      <div class="value" id="height">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title"> Цель</div>
+      <div class="value" id="goal">-</div>
+    </div>
+
+    <div class="card">
+      <div class="title"> Прогресс</div>
+      <div class="value" id="progressText">0%</div>
+      <div class="bar"><div class="fill" id="bar"></div></div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <h3>🥗 КБЖУ</h3>
+    <div class="kbju">
+      <div>🔥<div id="calories">0</div></div>
+      <div>🥩<div id="protein">0</div></div>
+      <div>🧈<div id="fat">0</div></div>
+      <div>🍚<div id="carbs">0</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🏋️ Сила</h3>
+    <canvas id="strengthChart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>⚖️ Вес</h3>
+    <canvas id="weightChart"></canvas>
+  </div>
+
+</div>
+
+<script>
+const role = (localStorage.getItem("role") || "").toLowerCase();
+const userId = localStorage.getItem("userId");
+
+if (!userId) {
+    window.location.href = "/adminvh.html";
+}
+
+
+if (role === "admin") {
+    document.getElementById("adminBtn").style.display = "inline-block";
+}
+const authUserId = localStorage.getItem("userId");
+let profileId = localStorage.getItem("selectedUserId");
+
+if (!profileId || profileId === "null") {
+    profileId = authUserId;
+}
+
+if (role !== "admin") profileId = authUserId;
+if (!authUserId) window.location.href = "/adminvh.html";
+
+let strengthChartInstance, weightChartInstance;
+
+async function loadProfile() {
+  const res = await fetch(`/users/${profileId}`);
+  const data = await res.json();
+
+  document.getElementById("userId").innerText = profileId;
+  document.getElementById("nameTitle").innerText = data.name;
+  document.getElementById("avatar").innerText = data.name?.[0] || "A";
+
+  document.getElementById("weight").innerText = data.weight;
+  document.getElementById("height").innerText = data.height;
+  document.getElementById("goal").innerText = data.goal;
+
+  document.getElementById("calories").innerText = data.dailyCaloriesGoal;
+  document.getElementById("protein").innerText = data.dailyProteinGoal;
+  document.getElementById("fat").innerText = data.dailyFatGoal;
+  document.getElementById("carbs").innerText = data.dailyCarbsGoal;
+
+  const p = data.progressPercent || 0;
+  document.getElementById("progressText").innerText = p + "%";
+  document.getElementById("bar").style.width = p + "%";
+}
+
+function initCharts(){
+  strengthChartInstance = new Chart(document.getElementById("strengthChart"), {
+    type: "line",
+    data: { labels:["1","2","3","4"], datasets:[{data:[40,55,65,80],borderColor:"#22c55e",tension:0.3}] }
+  });
+
+  weightChartInstance = new Chart(document.getElementById("weightChart"), {
+    type: "line",
+    data: { labels:["1","2","3","4"], datasets:[{data:[78,77,75,73],borderColor:"#3b82f6",tension:0.3}] }
+  });
+}
+
+function logout(){
+  localStorage.clear();
+  location.href="/adminvh.html";
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadProfile();
+  initCharts();
+});
+</script>
+
+</body>
+</html>

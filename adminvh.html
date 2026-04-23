@@ -1,19 +1,77 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Вход администратора | FitAdmin</title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-    <div class="login-container">
-        <h1>Вход администратора</h1>
-        <div class="error-msg" id="error-msg">Неверный логин или пароль</div>
-        <input type="text" id="login" placeholder="Логин">
-        <input type="password" id="password" placeholder="Пароль">
-        <button id="login-btn">Войти</button>
-    </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan — Вход</title>
 
-    <script src="/login.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+<div class="login-wrapper">
+<div class="login-card">
+
+  <div class="logo">FitPlan</div>
+
+  <h1>Вход</h1>
+  <p>Добро пожаловать обратно</p>
+
+  <input type="text" id="login" placeholder="Email">
+  <input type="password" id="password" placeholder="Пароль">
+
+  <button id="login-btn">Войти</button>
+
+  <div id="error-msg"></div>
+
+</div>
+</div>
+
+<script>
+document.getElementById("login-btn").addEventListener("click", async () => {
+
+  const email = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const error = document.getElementById("error-msg");
+
+  error.innerText = "";
+
+  if (!email || !password) {
+    error.innerText = "Введите email и пароль";
+    return;
+  }
+
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+if (!data.success) {
+  error.innerText = "Неверный email или пароль";
+  return;
+}
+
+localStorage.setItem("userId", data.id);
+localStorage.setItem("role", data.role);
+
+const role = data.rol;
+
+if (role === "admin") {
+  window.location.href = "/users.html";
+} else {
+  window.location.href = "/profil.html";
+}
+
+  } catch (e) {
+    error.innerText = "Ошибка сервера";
+  }
+});
+</script>
+
 </body>
 </html>
